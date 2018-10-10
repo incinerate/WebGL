@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>HW1_Points_Cun Shi</title>
+    <meta name="author" content="Cun Shi">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<script id="vertex-shader" type="x-shader/x-vertex">
+attribute vec3 aPosition;
+attribute vec4 vertColor;
+varying vec4 fragColor;
+
+void main() {
+  gl_Position = vec4(aPosition, 2.0);
+  gl_PointSize = 10.0;
+	fragColor = vertColor;
+}
+
+</script>
+
+<script id="fragment-shader" type="x-shader/x-fragment">
+precision mediump float;
+
+varying vec4 fragColor;
+void main() {
+  gl_FragColor = fragColor;
+}
+</script>
+  </head>
+
+  <body>
+    <canvas id="points" width="640" height="480">
+      Your browser doesn't appear to support the HTML5 element.
+    </canvas>
+
+    <script type="text/javascript" src="js/glUtils.js"></script>
+
+    <script type="text/javascript" src="js/points.js"></script>
+  </body>
+</html>

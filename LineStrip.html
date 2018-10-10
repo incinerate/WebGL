@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>LineStrip</title>
+    <meta name="author" content="Cun Shi">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <!-- Shaders -->
+  	<script id="vertex-shader" type="x-shader/x-vertex">
+	attribute vec3 linePosition;
+	attribute vec4 vertColor;
+	varying vec4 fragColor;
+
+	void main()
+	{
+   	 	gl_Position = vec4(linePosition, 2.0);
+    	fragColor = vertColor;
+	}
+	
+	</script>
+
+	<script id="fragment-shader" type="x-shader/x-fragment">
+	precision mediump float;
+   
+	varying vec4 fragColor;
+
+	void main()
+	{
+    	gl_FragColor = fragColor;
+	}
+
+
+	</script>
+  </head>
+
+  <body onload="InitDemo();">
+	<canvas id="linestrip">
+	</canvas>
+	<script  type="text/javascript" src="js/linestrip.js"></script>
+	<script  type="text/javascript" src="js/glUtils.js"></script>
+  </body>
+</html>

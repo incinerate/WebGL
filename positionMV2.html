@@ -1,0 +1,65 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <meta name="author" content="Cun Shi">
+        <title>Triangles translation</title>
+<script id="vertex-shader" type="x-shader/x-vertex">
+attribute vec2 vertPosition;
+attribute vec3 vertColor;
+uniform vec4 u_Translation;
+
+varying vec3 fragColor;
+
+void main()
+{
+    gl_Position = vec4(vertPosition, 0.0, 1.0) + u_Translation;
+    fragColor = vertColor;
+}
+</script>
+
+<script id="fragment-shader" type="x-shader/x-fragment">
+precision mediump float;
+   
+varying vec3 fragColor;
+
+void main()
+{
+    gl_FragColor = vec4(fragColor, 1.0);
+}
+</script>
+        <script type="text/javascript" src="js/initShaders.js"></script>
+        <script type="text/javascript" src="js/glMatrix-0.9.5.min.js"></script>
+        <script type="text/javascript" src="js/webgl-utils.js"></script>
+        <script type="text/javascript" src="js/translatedTriangle.js"></script>
+        <script type="text/javascript" src="js/jquery-3.2.1.min.js"></script>
+<script type="text/javascript">
+$("#ObjNumber").keyup(function(){
+    $(this).val($(this).val().replace( /[^0-9]/g,''));
+}).bind("paste",function(){
+    $(this).val($(this).val().replace( /[^0-9]/g,''));
+})
+</script>
+    </head>
+    <body onload="startup();">
+     x:<input id="positionX" type="text" style="color: rgb(153, 153, 153);" value="Please insert number" 
+onfocus="if(value=='Please insert number') {value='';}this.style.color='#000';" 
+onblur="if (value=='') {value='Triangle Location X';this.style.color='#999';}"/> 
+ y:<input id="positionY" type="text" style="color: rgb(153, 153, 153);" value="Please insert number" 
+onfocus="if(value=='Please insert number') {value='';}this.style.color='#000';" 
+onblur="if (value=='') {value='Triangle Location Y';this.style.color='#999';}"/> 
+Numbers of Obj:<input id="ObjNumber" type="text" placeholder="1" style="color: rgb(153, 153, 153);" value="Please insert number 1-6" 
+onfocus="if(value=='Please insert number 1-6') {value='';}this.style.color='#000';" 
+onblur="if (value=='') {value='Please insert number 1-6';this.style.color='#999';}"/>
+        <canvas id="myGLCanvas" width="600" height="600">
+        </canvas>
+        <br>
+    </body>
+<div>
+<h2>Instruction:</h2> Input number in "Number of Obj" to control the number of triangles
+displayed in screen. Effective value: 0-6<br>
+Input number in "x" and "y" to control the last triangle's position.
+Keep "x" and "y" empty so that you can move triangles by keyboard.
+</div>
+    
+</html>

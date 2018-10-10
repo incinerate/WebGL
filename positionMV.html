@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="author" content="Cun Shi">
+<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+<title>HW2_Cun Shi</title>
+<script  type="text/javascript" src="js/jquery-3.2.1.min.js"></script>
+<script id="vertex-shader" type="x-shader/x-vertex">
+attribute vec4 aPosition;
+attribute vec4 aColor;
+
+uniform mat4 uModelMatrix;
+
+varying vec4 vColor;
+
+void main() {
+  gl_Position = uModelMatrix * aPosition;
+  vColor = aColor;
+}
+</script>
+
+<script id="fragment-shader" type="x-shader/x-fragment">
+precision mediump float;
+
+varying vec4 vColor;
+
+void main() {
+  gl_FragColor = vColor;
+}
+
+</script>
+<script type="text/javascript">
+$("#ObjNumber").keyup(function(){
+    $(this).val($(this).val().replace( /[^0-9]/g,''));
+}).bind("paste",function(){
+    $(this).val($(this).val().replace( /[^0-9]/g,''));
+})
+</script>
+</head>
+
+<body>
+<canvas id="project2">
+</canvas>
+<br>
+Numbers of Obj:<input id="ObjNumber" type="text" onchange="InitDemo()" placeholder="1" style="color: rgb(153, 153, 153);" value="Please insert number 1-10" 
+onfocus="if(value=='Please insert number 1-10') {value='';}this.style.color='#000';" 
+onblur="if (value=='') {value='Please insert number 1-10';this.style.color='#999';}"/>
+
+<script  type="text/javascript" src="js/glUtils.js"></script>
+<script  type="text/javascript" src="js/signals.js"></script>
+<script  type="text/javascript" src="js/glMatrix.js"></script>
+<script  type="text/javascript" src="js/2DMovement.js"></script>
+
+</body>
+</html>
