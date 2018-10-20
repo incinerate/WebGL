@@ -1,10 +1,5 @@
 (function(global) {
 
-  /*
-  * Constants and Main
-  * www.programmingtil.com
-  * www.codenameparkerllc.com
-  */
   var ANGLE_PER_SECOND = 45.0;
   var mvMatrix = mat4.create();
   var pMatrix = mat4.create();

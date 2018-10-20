@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>HW4_Lighting and PLY Models</title>
+<meta name="author" content="Cun Shi">
+
+<script type="text/javascript" src="js/glMatrix-0.9.5.min.js"></script>
+<script type="text/javascript" src="js/webgl-utils.js"></script>
+<script type="text/javascript" src="js/plyParser-byc02-proj4.js"></script>
+
+<!-- Per-Vertex-Lighting Fragment Shader -->
+<script id="per-vertex-lighting-fs" type="x-shader/x-fragment">
+	precision mediump float;
+
+    varying vec2 vTextureCoord;
+    varying vec3 vLightWeighting;
+
+    uniform bool uUseTextures;
+
+    uniform sampler2D uSampler;
+
+    void main(void) {
+        vec4 fragmentColor;
+        if (uUseTextures)
+            fragmentColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
+        else
+            fragmentColor = vec4(1.0, 1.0, 1.0, 1.0);
+        gl_FragColor = vec4(fragmentColor.rgb * vLightWeighting, fragmentColor.a);
+    }
+</script>
+
+<!-- Per-Vertex-Lighting Vertex Shader -->
+<script id="per-vertex-lighting-vs" type="x-shader/x-vertex">
+    attribute vec3 aVertexPosition;
+    attribute vec3 aVertexNormal;
+    attribute vec2 aTextureCoord;
+
+    uniform mat4 uMVMatrix;
+    uniform mat4 uPMatrix;
+    uniform mat3 uNMatrix;
+
+    uniform vec3 uAmbientColor;
+
+    uniform vec3 uPointLightingLocation;
+    uniform vec3 uPointLightingColor;
+
+    uniform bool uUseLighting;
+
+    varying vec2 vTextureCoord;
+    varying vec3 vLightWeighting;
+
+	// point light
+    uniform vec3 uPtLight1Loc;      // location
+    uniform vec3 uPtLight2Loc;      // location
+    uniform vec3 uPtLight3Loc;      // location
+    uniform vec3 uPtLight4Loc;      // location
+    uniform vec3 uPtLight5Loc;      // location
+    uniform vec3 uPtLight1Col;      // color 
+    uniform vec3 uPtLight2Col;      // color 
+    uniform vec3 uPtLight3Col;      // color 
+    uniform vec3 uPtLight4Col;      // color 
+    uniform vec3 uPtLight5Col;      // color 
+
+	// booleans
+    uniform bool uPtLight1On;
+    uniform bool uPtLight2On;
+    uniform bool uPtLight3On;
+    uniform bool uPtLight4On;
+    uniform bool uPtLight5On;
+
+    void main(void) {
+		vec3 transformedNormal;
+		float directionalLightWeighting;
+        vec4 mvPosition = uMVMatrix * vec4(aVertexPosition, 1.0);
+        gl_Position = uPMatrix * mvPosition;
+        vTextureCoord = aTextureCoord;
+
+        if (!uUseLighting)
+            vLightWeighting = vec3(1.0, 1.0, 1.0);
+        else {
+            vec3 lightDirection = normalize(uPointLightingLocation - mvPosition.xyz);
+
+            transformedNormal = uNMatrix * aVertexNormal;
+            directionalLightWeighting = max(dot(transformedNormal, lightDirection), 0.0);
+//           vLightWeighting = uAmbientColor + uPointLightingColor * directionalLightWeighting;
+        }
+		// POINT LIGHTS
+          vec3 position = (uMVMatrix * vec4(aVertexPosition,1.0)).xyz;
+          
+          float ptLight1_directionalWeight;
+          float ptLight2_directionalWeight;
+          float ptLight3_directionalWeight;
+          float ptLight4_directionalWeight;
+          float ptLight5_directionalWeight;
+          
+          // POINT LIGHT 1
+          if(!uPtLight1On){
+            ptLight1_directionalWeight = 0.0;
+          }
+          else{
+            vec3 ptLight1Dir = normalize(uPtLight1Loc - position.xyz);
+
+            ptLight1_directionalWeight = 
+              max(dot(transformedNormal, ptLight1Dir), 0.0);
+          }
+          
+          // POINT LIGHT 2
+          if(!uPtLight2On){
+            ptLight2_directionalWeight = 0.0;
+          }
+          else{
+            vec3 ptLight2Dir = normalize(uPtLight2Loc - position.xyz);
+
+            ptLight2_directionalWeight = 
+              max(dot(transformedNormal, ptLight2Dir), 0.0);
+          }
+          
+          // POINT LIGHT 3
+          if(!uPtLight3On){
+            ptLight3_directionalWeight = 0.0;
+          }
+          else{
+            vec3 ptLight3Dir = normalize(uPtLight3Loc - position.xyz);
+
+            ptLight3_directionalWeight = 
+              max(dot(transformedNormal, ptLight3Dir), 0.0);
+          }
+          
+          // POINT LIGHT 4
+          if(!uPtLight4On){
+            ptLight4_directionalWeight = 0.0;
+          }
+          else{
+            vec3 ptLight4Dir = normalize(uPtLight4Loc - position.xyz);
+
+            ptLight4_directionalWeight = max(dot(transformedNormal, ptLight4Dir), 0.0);
+          }
+          
+          // POINT LIGHT 5
+          if(!uPtLight5On){
+            ptLight5_directionalWeight = 0.0;
+          }
+          else{
+            vec3 ptLight5Dir = normalize(uPtLight5Loc - position.xyz);
+
+            ptLight5_directionalWeight = max(dot(transformedNormal, ptLight5Dir), 0.0);
+          }
+          
+          
+          vLightWeighting = 
+            uAmbientColor + 
+            uPointLightingColor * directionalLightWeighting + 
+            uPtLight1Col * ptLight1_directionalWeight +
+            uPtLight2Col * ptLight2_directionalWeight +
+            uPtLight3Col * ptLight3_directionalWeight +
+            uPtLight4Col * ptLight4_directionalWeight +
+            uPtLight5Col * ptLight5_directionalWeight;
+	      }
+</script>
+<script id="per-fragment-lighting-fs" type="x-shader/x-fragment">
+    precision mediump float;
+
+    varying vec2 vTextureCoord;
+    varying vec3 vTransformedNormal;
+    varying vec4 vPosition;
+
+    uniform bool uUseLighting;
+    uniform bool uUseTextures;
+
+    uniform vec3 uAmbientColor;
+
+    uniform vec3 uPointLightingLocation;
+    uniform vec3 uPointLightingColor;
+
+    uniform sampler2D uSampler;
+
+    uniform float uMaterialShininess;
+
+    uniform bool uShowSpecularHighlights;
+
+    uniform vec3 uPointLightingSpecularColor;
+
+	// point light
+    uniform vec3 uPtLight1Loc;      // location
+    uniform vec3 uPtLight2Loc;      // location
+    uniform vec3 uPtLight3Loc;      // location
+    uniform vec3 uPtLight4Loc;      // location
+    uniform vec3 uPtLight5Loc;      // location
+    uniform vec3 uPtLight1Col;      // color 
+    uniform vec3 uPtLight2Col;      // color 
+    uniform vec3 uPtLight3Col;      // color 
+    uniform vec3 uPtLight4Col;      // color 
+    uniform vec3 uPtLight5Col;      // color 
+
+	// booleans
+    uniform bool uPtLight1On;
+    uniform bool uPtLight2On;
+    uniform bool uPtLight3On;
+    uniform bool uPtLight4On;
+    uniform bool uPtLight5On;
+
+	float specularLightWeighting;
+	float specularLightWeighting1;
+    float specularLightWeighting2;
+    float specularLightWeighting3;
+    float specularLightWeighting4;
+    float specularLightWeighting5;
+
+    void main(void) {
+        vec3 lightWeighting;
+		vec3 normal = normalize(vTransformedNormal);
+		vec3 eyeDirection = normalize(-vPosition.xyz);
+ 		float directionalLightWeighting;
+         if (!uUseLighting)
+            lightWeighting = vec3(1.0, 1.0, 1.0);
+        else {
+            vec3 lightDirection = normalize(uPointLightingLocation - vPosition.xyz);
+			
+			specularLightWeighting = 0.0;
+            if(uShowSpecularHighlights) {
+//              vec3 eyeDirection = normalize(-vPosition.xyz);
+                vec3 reflectionDirection = reflect(-lightDirection, normal);
+                specularLightWeighting = pow(max(dot(reflectionDirection, eyeDirection), 0.0), uMaterialShininess);
+            }
+
+            directionalLightWeighting = max(dot(normal, lightDirection), 0.0);
+//            lightWeighting = uAmbientColor + uPointLightingColor * directionalLightWeighting + (specularLightWeighting * uPointLightingSpecularColor);
+        }
+
+		// POINT LIGHTS
+          
+          float ptLight1_directionalWeight;
+          float ptLight2_directionalWeight;
+          float ptLight3_directionalWeight;
+          float ptLight4_directionalWeight;
+          float ptLight5_directionalWeight;
+          
+          // POINT LIGHT 1
+          if(!uPtLight1On){
+            ptLight1_directionalWeight = 0.0;
+          }
+          else{
+            vec3 ptLight1Dir = normalize(uPtLight1Loc - vPosition.xyz);
+
+			specularLightWeighting1 = 0.0;
+            if(uShowSpecularHighlights) {
+                
+                vec3 reflectionDirection = reflect(-ptLight1Dir, normal);
+                specularLightWeighting1 = pow(max(dot(reflectionDirection, eyeDirection), 0.0), uMaterialShininess);
+            }
+            ptLight1_directionalWeight = 
+              max(dot(normal, ptLight1Dir), 0.0);
+          }
+          
+          // POINT LIGHT 2
+          if(!uPtLight2On){
+            ptLight2_directionalWeight = 0.0;
+          }
+          else{
+            vec3 ptLight2Dir = normalize(uPtLight2Loc - vPosition.xyz);
+
+			specularLightWeighting2 = 0.0;
+            if(uShowSpecularHighlights) {
+                
+                vec3 reflectionDirection = reflect(-ptLight2Dir, normal);
+                specularLightWeighting2 = pow(max(dot(reflectionDirection, eyeDirection), 0.0), uMaterialShininess);
+            }
+            ptLight2_directionalWeight = 
+              max(dot(normal, ptLight2Dir), 0.0);
+          }
+          
+          // POINT LIGHT 3
+          if(!uPtLight3On){
+            ptLight3_directionalWeight = 0.0;
+          }
+          else{
+            vec3 ptLight3Dir = normalize(uPtLight3Loc - vPosition.xyz);
+
+			specularLightWeighting3 = 0.0;
+            if(uShowSpecularHighlights) {
+                
+                vec3 reflectionDirection = reflect(-ptLight3Dir, normal);
+                specularLightWeighting3 = pow(max(dot(reflectionDirection, eyeDirection), 0.0), uMaterialShininess);
+            }
+
+            ptLight3_directionalWeight = 
+              max(dot(normal, ptLight3Dir), 0.0);
+          }
+          
+          // POINT LIGHT 4
+          if(!uPtLight4On){
+            ptLight4_directionalWeight = 0.0;
+          }
+          else{
+            vec3 ptLight4Dir = normalize(uPtLight4Loc - vPosition.xyz);
+
+			specularLightWeighting4 = 0.0;
+            if(uShowSpecularHighlights) {
+                
+                vec3 reflectionDirection = reflect(-ptLight4Dir, normal);
+                specularLightWeighting4 = pow(max(dot(reflectionDirection, eyeDirection), 0.0), uMaterialShininess);
+            }
+
+            ptLight4_directionalWeight = max(dot(normal, ptLight4Dir), 0.0);
+          }
+          
+          // POINT LIGHT 5
+          if(!uPtLight5On){
+            ptLight5_directionalWeight = 0.0;
+          }
+          else{
+            vec3 ptLight5Dir = normalize(uPtLight5Loc - vPosition.xyz);
+
+			specularLightWeighting5 = 0.0;
+            if(uShowSpecularHighlights) {
+                
+                vec3 reflectionDirection = reflect(-ptLight5Dir, normal);
+                specularLightWeighting5 = pow(max(dot(reflectionDirection, eyeDirection), 0.0), uMaterialShininess);
+            }
+
+            ptLight5_directionalWeight = max(dot(normal, ptLight5Dir), 0.0);
+          }
+          
+          
+          lightWeighting = 
+            uAmbientColor + 
+            uPointLightingColor * directionalLightWeighting + (specularLightWeighting * uPointLightingSpecularColor)+
+            uPtLight1Col * ptLight1_directionalWeight + (specularLightWeighting1 * uPointLightingSpecularColor) +
+            uPtLight2Col * ptLight2_directionalWeight + (specularLightWeighting2 * uPointLightingSpecularColor) + 
+            uPtLight3Col * ptLight3_directionalWeight + (specularLightWeighting3 * uPointLightingSpecularColor) +
+            uPtLight4Col * ptLight4_directionalWeight + (specularLightWeighting4 * uPointLightingSpecularColor) +
+            uPtLight5Col * ptLight5_directionalWeight + (specularLightWeighting5 * uPointLightingSpecularColor);
+
+
+        vec4 fragmentColor;
+        if (uUseTextures)
+            fragmentColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t));
+        else
+            fragmentColor = vec4(1.0, 1.0, 1.0, 1.0);
+        gl_FragColor = vec4(fragmentColor.rgb * lightWeighting, fragmentColor.a);
+    }
+</script>
+    
+<script id="per-fragment-lighting-vs" type="x-shader/x-vertex">
+    attribute vec3 aVertexPosition;
+    attribute vec3 aVertexNormal;
+    attribute vec2 aTextureCoord;
+
+    uniform mat4 uMVMatrix;
+    uniform mat4 uPMatrix;
+    uniform mat3 uNMatrix;
+
+    varying vec2 vTextureCoord;
+    varying vec3 vTransformedNormal;
+    varying vec4 vPosition;
+
+    void main(void) {
+        vPosition = uMVMatrix * vec4(aVertexPosition, 1.0);
+        gl_Position = uPMatrix * vPosition;
+        vTextureCoord = aTextureCoord;
+        vTransformedNormal = uNMatrix * aVertexNormal;
+    }
+</script>
+
+<script type="text/javascript" src="js/per_fragmentLighting.js">
+	
+</script>
+
+<style type="text/css">
+	#canvas {
+		border: 1px solid #000000;
+	}
+
+	#sidebar {
+		position: absolute;
+		top: 30px;
+		bottom: 30px;
+		right: 30px;
+		width: 500px;
+		border-left: solid;
+		padding-left: 30px;
+	}
+
+	#ambient, #directional {
+		border: 0;
+		padding: 10px;
+	}
+
+	th {
+		text-align: left;
+	}
+
+	input[type="text"] {
+    	width: 50px;
+	}
+</style>
+
+</head>
+
+<body onload="webGLStart();">
+	<header>
+		<h1>HW4_Lighting and PLY Models</h1>
+		<div>Per-fragment lighting, multiple shader programs, Specular Lighting, multiple 
+		Lighting Points, flexible Shininess .......</div>
+	</header></br>
+	
+	<article>
+		<canvas id="canvas" width="1000" height="700"></canvas>
+
+	</article></br>
+
+	<section id="sidebar">
+		<article>
+			<input id="lighting" type="checkbox" checked="checked"> Use Lighting</input></br>
+            <input id="perFragmentLighting" type="checkbox" checked="checked"> Per-fragment Lighting</input></br>
+            <input id="textures" type="checkbox" checked="checked"> Use Textures</input><br>
+            <input id="specular" type="checkbox" checked="checked"> Show Specular Highlight</input></br>
+		</article></br>
+		
+		<article>
+            <b><u>Material</u></b>
+            <table id="material">
+                <tr>
+                    <td>Shininess: <input type="text" id="shininess" value="32.0"></input>
+                </tr>
+            </table>
+        </article></br>
+		<article>
+            <input id="ptLight1" type="checkbox" checked="checked"> ptLight1</input></br>
+            <input id="ptLight2" type="checkbox" checked="checked"> ptLight2</input></br>
+            <input id="ptLight3" type="checkbox" checked="checked"> ptLight3</input></br>
+            <input id="ptLight4" type="checkbox" checked="checked"> ptLight4</input></br>
+            <input id="ptLight5" type="checkbox" checked="checked"> ptLight5</input></br>
+        </article></br>
+
+		<article>
+			<b><u>Point Lighting</u></b>
+			<table id="point">
+				<tr>
+					<th>Location</th>
+				</tr>
+				<tr>
+					<td>X: <input type="text" id="pointX" value="0.0">, </input>
+					<td>Y: <input type="text" id="pointY" value="0.0">, </input>
+					<td>Z: <input type="text" id="pointZ" value="-5.0"></input>
+				</tr>
+				<tr>
+					<th hidden="true">Color</th>
+				</tr>
+				<tr hidden="true">
+					<td>R: <input type="text" id="pointR" value="0.9">, </input>
+					<td>G: <input type="text" id="pointG" value="0.9">, </input>
+					<td>B: <input type="text" id="pointB" value="0.9"></input>
+				</tr>
+				<tr>
+					<th>Specular Color</th>
+				</tr>
+				<tr>
+					<td>R: <input type="text" id="pointSpecularR" value="0.8">, </input>
+					<td>G: <input type="text" id="pointSpecularG" value="0.8">, </input>
+					<td>B: <input type="text" id="pointSpecularB" value="0.8"></input>
+				</tr>
+                <tr>
+                    <th>Diffuse Color</th>
+                </tr>
+                <tr>
+                    <td>R: <input type="text" id="pointDiffuseR" value="0.8">, </input>
+                    <td>G: <input type="text" id="pointDiffuseG" value="0.8">, </input>
+                    <td>B: <input type="text" id="pointDiffuseB" value="0.8"></input>
+                </tr>
+			</table>
+		</article></br>
+		
+		<article>
+			<b><u>Ambient Lighting</u></b>
+            <table id="ambient">
+                <tr>
+                    <th>Color</th>
+                </tr>
+                <tr>
+                    <td>R: <input type="text" id="ambientR" value="0.2">, </input>
+                    <td>G: <input type="text" id="ambientG" value="0.2">, </input>
+                    <td>B: <input type="text" id="ambientB" value="0.2"></input>
+                </tr>
+            </table>
+        </article>
+        
+        <article>
+        <p>Note: 1. To see a good per_fragment lighting effect, I recommend Point Loction:(0,0,-50)</p><br>
+        <p>2. Plz dont set the Shiniess value as 0 or null.<p>
+          
+        </article>
+	</section>
+	
+</body>
+</html>
